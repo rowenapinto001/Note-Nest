@@ -1,5 +1,5 @@
 import { Heart, Send, Sparkles, UserRound } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 const maxName = 40;
 const maxMessage = 280;
@@ -34,10 +34,6 @@ export default function NoteForm({ onSubmit }) {
   const [style, setStyle] = useState(draft.style || previewStyles[0].style);
   const [status, setStatus] = useState({ type: '', text: '' });
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    localStorage.setItem(draftKey, JSON.stringify({ name, message, style }));
-  }, [name, message, style]);
 
   async function handleSubmit(event) {
     event.preventDefault();
