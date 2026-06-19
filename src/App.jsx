@@ -1,8 +1,19 @@
 import { useEffect, useState } from 'react';
+import AdminPage from './components/AdminPage.jsx';
 import Hero from './components/Hero.jsx';
 import NoteForm from './components/NoteForm.jsx';
 import NotesWall from './components/NotesWall.jsx';
 import { hasSupabaseConfig, supabase } from './lib/supabase.js';
+
+function usePathRoute() {
+  const [path, setPath] = useState(() => window.location.pathname);
+  useEffect(() => {
+    const onChange = () => setPath(window.location.pathname);
+    window.addEventListener('popstate', onChange);
+    return () => window.removeEventListener('popstate', onChange);
+  }, []);
+  return path;
+}
 
 const colors = ['#fff3b8', '#ffdce8', '#d9f7ff', '#f1e3ff', '#ffe5cf', '#e3f8d8'];
 
@@ -14,6 +25,7 @@ function pickStyle() {
 }
 
 export default function App() {
+  const path = usePathRoute();
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState('');
@@ -32,6 +44,7 @@ export default function App() {
       const { data, error } = await supabase
         .from('notes')
         .select('*')
+        .eq('status', 'approved')
         .order('created_at', { ascending: false })
         .range(from, from + pageSize - 1);
       if (error) {
@@ -53,13 +66,13 @@ export default function App() {
 
   async function addNote({ name, message, style }) {
     if (!hasSupabaseConfig) throw new Error('Supabase is not configured yet.');
-    const styledNote = { name: name || null, message, style, ...pickStyle() };
-    const { data, error } = await supabase.from('notes').insert(styledNote).select().single();
-    const savedNote = error
-      ? { id: `local-${Date.now()}`, created_at: new Date().toISOString(), ...styledNote }
-      : data;
-    setNotes((current) => [savedNote, ...current]);
+    const styledNote = { name: name || null, message, style, status: 'pending', ...pickStyle() };
+    const { error } = await supabase.from('notes').insert(styledNote);
+    if (error) throw error;
+    // Pending notes don't appear on the wall until an admin approves them.
   }
+
+  if (path === '/admin') return <AdminPage />;
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#fff7f3] text-[#5f3b36]">

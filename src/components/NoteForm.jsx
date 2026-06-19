@@ -52,7 +52,7 @@ export default function NoteForm({ onSubmit }) {
       localStorage.removeItem(draftKey);
       setName('');
       setMessage('');
-      setStatus({ type: 'success', text: 'Your note is on the wall.' });
+      setStatus({ type: 'success', text: 'Thank you! Your note is awaiting approval and will appear once a moderator approves it.' });
     } catch {
       setStatus({ type: 'error', text: 'Could not save that note. Please try again.' });
     } finally {
